@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: CDU Query
+Globals:
+  Function:
+    Timeout: 15
+    Runtime: python3.7
+Resources:
+  CDUQueryLambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: cdu-query
+      Description: CDU Query Lambda Layer
+      ContentUri: s3://cdu-query-lambda-layer/a4bd2cb97dbac8f8c20b09dd74ae04cf
+      CompatibleRuntimes:
+      - python3.7
+      LicenseInfo: MIT
+      RetentionPolicy: Retain
+  GetDistanceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://cdu-query-lambda-layer/3888d2e988fbd3cd75453b7fa767f7f6
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Events:
+        GetDistance:
+          Type: Api
+          Properties:
+            Path: /cdu-query
+            Method: get
+      Layers:
+      - arn:aws:lambda:us-east-1:383957508710:layer:cdu-query:1
+Outputs:
+  CDUQueryApi:
+    Description: API Gateway endpoint URL for Prod stage for CDU query function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/cdu-query/
+  GetDistanceFunction:
+    Description: Get Levenshtein Distance Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - GetDistanceFunction
+      - Arn
+  HelloWorldFunctionIamRole:
+    Description: Implicit IAM Role created for Levenshtein Distance function
+    Value:
+      Fn::GetAtt:
+      - GetDistanceFunction
+      - Arn
